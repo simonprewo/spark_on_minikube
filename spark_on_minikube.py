@@ -16,7 +16,7 @@ def prepare_docker_container_with_spark(spark_url):
     execute_command_inside_minikube("sudo mkdir -p /usr/local/")
     execute_command_inside_minikube("sudo zcat spark-2.3.1-bin-hadoop2.7.tgz | tar -xvf - ")
     execute_command_inside_minikube("sudo mv spark-2.3.1-bin-hadoop2.7 /usr/local/spark")
-    execute_command_inside_minikube("sudo /usr/local/spark/bin/docker-image-tool.sh build")
+    execute_command_inside_minikube("cd /usr/local/spark && sudo ./bin/docker-image-tool.sh build")
 
 def deploy_on_kubernetes():
     print("TBD")
