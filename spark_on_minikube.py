@@ -31,8 +31,10 @@ def prepare_docker_container_with_spark(spark_url):
     os.system("kubectl create serviceaccount spark")
     os.system("kubectl create clusterrolebinding spark-role --clusterrole=edit --serviceaccount=default:spark --namespace=default")
 
-def deploy_on_kubernetes():
-    print("TBD")
+def run_spark_pi():
+    os.system("$SPARK_HOME/bin/spark-submit --master k8s://https://$(minikube ip):8443 --deploy-mode cluster --name spark-pi --class org.apache.spark.examples.SparkPi --conf spark.executor.instances=3 --conf spark.kubernetes.container.image=localhost:5000/spark --conf spark.kubernetes.authenticate.driver.serviceAccountName=spark local:///opt/spark/examples/jars/spark-examples_2.11-2.3.1.jar")
+
 
 install_and_delete_minikube()
 prepare_docker_container_with_spark("http://ftp-stud.hs-esslingen.de/pub/Mirrors/ftp.apache.org/dist/spark/spark-2.3.1/spark-2.3.1-bin-hadoop2.7.tgz")
+run_spark_pi()
