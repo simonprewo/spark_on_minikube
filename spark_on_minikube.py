@@ -11,6 +11,9 @@ def install_and_delete_minikube():
 def execute_command_inside_minikube(command):
     os.system("minikube ssh \"" + command + "\"")
 
+def copy_file_to_minikube(localfile_path, remotefile_path):
+    os.system("scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r -i $(minikube ssh-key) \"" + localfile_path + "\" docker@$(minikube ip):\"" + remotefile_path +"\"")
+
 def install_java_on_minikube():
     execute_command_inside_minikube("curl https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.1_linux-x64_bin.tar.gz --output java-11.tgz")
     execute_command_inside_minikube("sudo zcat java-11.tgz | tar -xvf - ")
@@ -31,6 +34,13 @@ def prepare_docker_container_with_spark(spark_url):
     os.system("kubectl create serviceaccount spark")
     os.system("kubectl create clusterrolebinding spark-role --clusterrole=edit --serviceaccount=default:spark --namespace=default")
 
+def prepare_friendly_hello_container():
+    copy_file_to_minikube("friendlyhellocontainer", "/home/docker/")
+    execute_command_inside_minikube("cd /home/docker/friendlyhellocontainer && docker build -t friendlyhello .")
+    execute_command_inside_minikube("docker tag friendlyhello localhost:5000/friendlyhello")
+    execute_command_inside_minikube("docker push localhost:5000/friendlyhello")
+
+
 def run_spark_pi():
     os.system("$SPARK_HOME/bin/spark-submit --master k8s://https://$(minikube ip):8443 --deploy-mode cluster --name spark-pi --class org.apache.spark.examples.SparkPi --conf spark.executor.instances=3 --conf spark.kubernetes.container.image=localhost:5000/spark --conf spark.kubernetes.authenticate.driver.serviceAccountName=spark local:///opt/spark/examples/jars/spark-examples_2.11-2.3.1.jar")
 
@@ -38,3 +48,4 @@ def run_spark_pi():
 install_and_delete_minikube()
 prepare_docker_container_with_spark("http://ftp-stud.hs-esslingen.de/pub/Mirrors/ftp.apache.org/dist/spark/spark-2.3.1/spark-2.3.1-bin-hadoop2.7.tgz")
 run_spark_pi()
+prepare_friendly_hello_container()
